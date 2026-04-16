@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FSU IT Services — Data Story v2</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0d1b2a;--navy-mid:#162436;--navy-light:#1e3248;
+  --teal:#00c9a7;--amber:#f5a623;--coral:#e84855;--purple:#7b5ea7;
+  --text:#e8edf2;--muted:#7a93a8;--border:rgba(255,255,255,0.08);
+  --slide-w:1100px;
+}
+body{background:#080f18;font-family:'DM Sans',sans-serif;color:var(--text);padding:40px 20px 80px}
+.deck-header{max-width:var(--slide-w);margin:0 auto 48px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:.5px solid var(--border);padding-bottom:24px}
+.deck-header h1{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400}
+.deck-header p{font-size:13px;color:var(--muted);margin-top:4px}
+.deck-tag{font-size:11px;color:var(--teal);letter-spacing:.1em;text-transform:uppercase}
+
+.slide{max-width:var(--slide-w);margin:0 auto 28px;background:var(--navy);border-radius:16px;border:.5px solid var(--border);overflow:hidden;position:relative}
+.slide-label{position:absolute;top:20px;right:24px;font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.slide-inner{padding:44px 52px}
+
+/* title slide */
+.slide-title .slide-inner{display:flex;flex-direction:column;gap:20px;min-height:300px;justify-content:center}
+.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.slide-title h2{font-family:'DM Serif Display',serif;font-size:46px;font-weight:400;line-height:1.15;max-width:700px}
+.slide-title h2 em{color:var(--teal);font-style:normal}
+.meta{font-size:13px;color:var(--muted);display:flex;gap:32px;margin-top:8px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block;margin-right:6px}
+
+/* section divider */
+.section-divider{max-width:var(--slide-w);margin:48px auto 16px;display:flex;align-items:center;gap:16px}
+.snum{font-family:'DM Serif Display',serif;font-size:13px;color:var(--teal);white-space:nowrap}
+.stitle{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);white-space:nowrap}
+.sline{flex:1;height:.5px;background:var(--border)}
+
+/* shared layout helpers */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.section-h{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;margin-bottom:8px;line-height:1.3}
+.section-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+.panel{background:var(--navy-mid);border-radius:12px;padding:20px 22px;border:.5px solid var(--border)}
+.panel-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);margin-bottom:10px}
+.chart-wrap{position:relative;width:100%}
+
+/* stat cards */
+.stat-card{background:var(--navy-mid);border-radius:12px;padding:20px;text-align:center;border:.5px solid var(--border)}
+.stat-card .n{font-family:'DM Serif Display',serif;font-size:52px;color:var(--coral);line-height:1}
+.stat-card .l{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+
+/* gif placeholders */
+.gif-slot{background:var(--navy-mid);border:1px dashed rgba(0,201,167,.3);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:28px;text-align:center;color:var(--teal);font-size:12px}
+.gif-slot strong{font-size:13px;color:var(--text)}
+
+/* context cards */
+.ctx-card{background:var(--navy-mid);border-radius:12px;padding:22px 20px;border:.5px solid var(--border)}
+.ctx-card h4{font-size:14px;font-weight:500;margin-bottom:8px}
+.ctx-card p{font-size:13px;color:var(--muted);line-height:1.6}
+.hl{color:var(--teal);font-weight:500}
+
+/* reframe */
+.reframe-card{border-radius:12px;padding:22px;border:1.5px solid}
+.reframe-card.wrong{border-color:rgba(232,72,85,.4);background:rgba(232,72,85,.05)}
+.reframe-card.right{border-color:rgba(0,201,167,.4);background:rgba(0,201,167,.05)}
+.reframe-card .tag{font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;font-weight:500}
+.reframe-card.wrong .tag{color:var(--coral)}
+.reframe-card.right .tag{color:var(--teal)}
+.reframe-card h4{font-size:15px;font-weight:500;margin-bottom:8px}
+.reframe-card p{font-size:13px;color:var(--muted);line-height:1.6}
+.risk-banner{background:rgba(245,166,35,.08);border:.5px solid rgba(245,166,35,.3);border-radius:12px;padding:20px 24px;display:flex;align-items:flex-start;gap:16px;margin-top:20px}
+.risk-banner h4{font-size:14px;font-weight:500;color:var(--amber);margin-bottom:4px}
+.risk-banner p{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* actions */
+.action-item{display:flex;align-items:flex-start;gap:14px;background:var(--navy-mid);border-radius:10px;padding:16px;border:.5px solid var(--border);margin-bottom:12px}
+.action-num{width:28px;height:28px;border-radius:50%;background:rgba(123,94,167,.2);border:1px solid rgba(123,94,167,.4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#b8a0d8;flex-shrink:0}
+.action-item h4{font-size:14px;font-weight:500;margin-bottom:4px}
+.action-item p{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* closing */
+.closing-inner{text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px;padding:60px 52px}
+.closing-inner h2{font-family:'DM Serif Display',serif;font-size:38px;font-weight:400;line-height:1.25;max-width:640px}
+.closing-inner h2 em{color:var(--teal);font-style:italic}
+.closing-stats{display:flex;gap:40px;margin-top:8px}
+.closing-stat .n{font-family:'DM Serif Display',serif;font-size:40px;color:var(--teal);line-height:1}
+.closing-stat .l{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* legend helpers */
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;font-size:12px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:5px}
+.lsq{width:10px;height:10px;border-radius:2px;display:inline-block}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="deck-header">
+  <div>
+    <div class="deck-tag">Data Story · v2 — Real Data</div>
+    <h1>FSU Technology Services — MISO Survey 2024</h1>
+    <p>MISM 6213 · Singh · Zamorano · Ani · Patel · Spring 2025</p>
+  </div>
+  <div style="font-size:12px;color:var(--muted);text-align:right">n=217 students · n=146 staff<br>All charts built from cleaned CSV data</div>
+</div>
+
+<!-- ═══════════ SLIDE 1: Title ═══════════ -->
+<div class="section-divider"><span class="snum">—</span><span class="stitle">Title</span><div class="sline"></div></div>
+<div class="slide slide-title">
+  <span class="slide-label">1 / 8</span>
+  <div class="slide-inner">
+    <div class="eyebrow">MISO Survey Analysis · Framingham State University · 2024</div>
+    <h2>FSU's IT services are <em>better than anyone knows.</em></h2>
+    <p style="font-size:15px;color:var(--muted);max-width:560px;line-height:1.7">A data story about the gap between service quality and service visibility — and what closing it could mean for the institution.</p>
+    <div class="meta">
+      <span><span class="dot"></span>2024 MISO Survey</span>
+      <span><span class="dot"></span>Students &amp; Staff</span>
+      <span><span class="dot"></span>Analyzed in Python</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SLIDE 2: The Hook ═══════════ -->
+<div class="section-divider"><span class="snum">01</span><span class="stitle">The Hook — The Paradox</span><div class="sline"></div></div>
+<div class="slide">
+  <span class="slide-label">2 / 8</span>
+  <div class="slide-inner">
+    <div class="two-col">
+      <div>
+        <h2 class="section-h">Almost nobody knows what IT offers —<br><span style="color:var(--coral);font-style:italic">yet everyone who uses it loves it.</span></h2>
+        <p class="section-sub">Out of every 100 students at FSU, fewer than 7 feel "very informed" about available IT services. For staff, it's fewer than 14. Yet Help Desk satisfaction scores sit near the top of the entire survey.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="stat-card">
+            <div class="n">6.6%</div>
+            <div class="l">of students feel<br>"very informed"<br><span style="color:var(--border-color);font-size:10px">(14 of 213 respondents)</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="n">13.7%</div>
+            <div class="l">of staff feel<br>"very informed"<br><span style="font-size:10px">(20 of 146 respondents)</span></div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:14px 16px;background:rgba(0,201,167,.06);border:.5px solid rgba(0,201,167,.2);border-radius:10px;font-size:13px;color:var(--muted);line-height:1.6">
+          <span style="color:var(--teal);font-weight:500">The paradox:</span> Low awareness + high satisfaction = not a performance problem. It's a visibility problem.
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <!-- Awareness distribution chart -->
+        <div class="panel">
+          <div class="panel-lbl">Awareness level — full distribution</div>
+          <div class="chart-wrap" style="height:160px"><canvas id="awarenessChart"></canvas></div>
+          <div class="legend">
+            <span><span class="lsq" style="background:#378ADD"></span>Students</span>
+            <span><span class="lsq" style="background:#00c9a7"></span>Staff</span>
+          </div>
+        </div>
+        <!-- Help Desk scores -->
+        <div class="panel">
+          <div class="panel-lbl">Help Desk satisfaction — all dimensions (out of 4)</div>
+          <div class="chart-wrap" style="height:140px"><canvas id="helpdeskChart"></canvas></div>
+          <div class="legend">
+            <span><span class="lsq" style="background:#378ADD"></span>Students</span>
+            <span><span class="lsq" style="background:#00c9a7"></span>Staff</span>
+          </div>
+        </div>
+        <div class="gif-slot" style="min-height:60px;flex-direction:row;gap:12px">
+          <span style="font-size:20px">●</span>
+          <div style="text-align:left"><strong>+ Dot Plot GIF (v4)</strong> — shows dots landing in "excellent zone" &gt;3.75</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SLIDE 3: Context ═══════════ -->
+<div class="section-divider"><span class="snum">02</span><span class="stitle">Context — Set the Stage</span><div class="sline"></div></div>
+<div class="slide">
+  <span class="slide-label">3 / 8</span>
+  <div class="slide-inner">
+    <h2 class="section-h">About this analysis</h2>
+    <p class="section-sub">The 2024 MISO Survey — cleaned, filtered, and analyzed in Python across two distinct populations.</p>
+    <div class="three-col">
+      <div class="ctx-card">
+        <h4>Two populations, kept separate</h4>
+        <p>Students and staff serve different roles and use different tools. <span class="hl">n=217 students</span> and <span class="hl">n=146 staff</span> after cleaning. Datasets analyzed independently to avoid conflating needs.</p>
+      </div>
+      <div class="ctx-card">
+        <h4>Data cleaned before analysis</h4>
+        <p>Removed <span class="hl">46 incomplete student</span> and <span class="hl">10 staff</span> records. Dropped library columns, open-text fields, and metadata. Converted <span class="hl">-99 sentinel values</span> to null to prevent bias.</p>
+      </div>
+      <div class="ctx-card">
+        <h4>Three analytical lenses</h4>
+        <p>Usage frequency, importance ratings, and satisfaction scores — compared side by side to find where expectation and reality diverge. Gap = Importance − Satisfaction.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SLIDE 4: Evidence A — Canvas ═══════════ -->
+<div class="section-divider"><span class="snum">03a</span><span class="stitle">Evidence — Canvas Divide</span><div class="sline"></div></div>
+<div class="slide">
+  <span class="slide-label">4 / 8</span>
+  <div class="slide-inner">
+    <div class="two-col">
+      <div>
+        <div class="eyebrow" style="margin-bottom:10px">Clue A · The Canvas Divide</div>
+        <h2 class="section-h">Students and staff live in completely different IT ecosystems.</h2>
+        <p class="section-sub">98.6% of students use Canvas multiple times a week. 78.3% of staff have never used it. A single communication strategy can't reach both groups.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="stat-card"><div class="n" style="color:var(--teal);font-size:38px">98.6%</div><div class="l">of students use Canvas<br>multiple times/week</div></div>
+          <div class="stat-card"><div class="n" style="font-size:38px">78.3%</div><div class="l">of staff have<br>never used Canvas</div></div>
+        </div>
+        <div style="padding:14px 16px;background:rgba(245,166,35,.06);border:.5px solid rgba(245,166,35,.2);border-radius:10px;font-size:13px;color:var(--muted);line-height:1.6">
+          <span style="color:var(--amber);font-weight:500">Implication:</span> Any communication fix needs two separate strategies — one that meets students inside Canvas, and one that reaches staff through the tools they actually use.
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-lbl">Canvas usage frequency — students vs. staff</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="canvasChart"></canvas></div>
+        <div class="legend">
+          <span><span class="lsq" style="background:#378ADD"></span>Students</span>
+          <span><span class="lsq" style="background:#e84855"></span>Staff</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SLIDE 5: Evidence B — Student gaps ═══════════ -->
+<div class="section-divider"><span class="snum">03b</span><span class="stitle">Evidence — Student Satisfaction Gaps</span><div class="sline"></div></div>
+<div class="slide">
+  <span class="slide-label">5 / 8</span>
+  <div class="slide-inner">
+    <div class="two-col">
+      <div>
+        <div class="eyebrow" style="margin-bottom:10px">Clue B · Student Gap Analysis</div>
+        <h2 class="section-h">Students are more satisfied than expected — except for wireless.</h2>
+        <p class="section-sub">For almost every service, student satisfaction exceeds importance. Wireless access (personal/on-campus) is the lone exception — and the gap is meaningful at +0.25 points.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="stat-card"><div class="n" style="color:var(--teal);font-size:34px">+0.25</div><div class="l">Wireless personal gap<br>(importance − satisfaction)</div></div>
+          <div class="stat-card"><div class="n" style="color:var(--teal);font-size:34px">−1.35</div><div class="l">Largest satisfaction surplus<br>(academic software)</div></div>
+        </div>
+        <div style="padding:14px 16px;background:rgba(0,201,167,.06);border:.5px solid rgba(0,201,167,.2);border-radius:10px;font-size:13px;color:var(--muted);line-height:1.6">
+          <span style="color:var(--teal);font-weight:500">Key read:</span> Negative gap = satisfaction exceeds expectations (good). Positive gap = students want more than they're getting.
+        </div>
+        <div style="margin-top:12px" class="gif-slot"><strong>+ Lollipop GIF (v3)</strong><span>Animated version of this chart</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-lbl">Gap = Importance − Satisfaction (student, key services)</div>
+        <div class="chart-wrap" style="height:340px"><canvas id="studentGapChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SLIDE 6: Evidence C — Staff gaps ═══════════ -->
+<div class="section-divider"><span class="snum">03c</span><span class="stitle">Evidence — Staff Satisfaction Gaps</span><div class="sline"></div></div>
+<div class="slide">
+  <span class="slide-label">6 / 8</span>
+  <div class="slide-inner">
+    <div class="two-col">
+      <div>
+        <div class="eyebrow" style="margin-bottom:10px">Clue C · Staff Gap Analysis</div>
+        <h2 class="section-h">For staff, one service stands alone — desktop &amp; software support.</h2>
+        <p class="section-sub">SDCP (software download &amp; desktop computing) is the only staff service where importance meaningfully exceeds satisfaction. It also carries the highest importance score of any IT service for staff at 3.75/4.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="stat-card"><div class="n" style="font-size:38px">3.75</div><div class="l">Importance score — highest<br>among all staff IT services</div></div>
+          <div class="stat-card"><div class="n" style="color:var(--teal);font-size:38px">+0.13</div><div class="l">Gap (only positive gap<br>in staff survey)</div></div>
+        </div>
+        <div style="padding:14px 16px;background:rgba(245,166,35,.06);border:.5px solid rgba(245,166,35,.2);border-radius:10px;font-size:13px;color:var(--muted);line-height:1.6">
+          <span style="color:var(--amber);font-weight:500">Note:</span> This is a real but bounded and fixable performance gap — not a systemic failure. Every other staff service shows satisfaction ≥ importance.
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-lbl">Importance vs. satisfaction — top staff services (out of 4)</div>
+        <div class="chart-wrap" style="height:340px"><canvas id="staffGapChart"></canvas></div>
+        <div class="legend">
+          <span><span class="lsq" style="background:#7b5ea7"></span>Importance</span>
+          <span><span class="lsq" style="background:#00c9a7"></span>Satisfaction</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SLIDE 7: Reframe ═══════════ -->
+<div class="section-divider"><span class="snum">04</span><span class="stitle">The Turning Point — Reframe</span><div class="sline"></div></div>
+<div class="slide">
+  <span class="slide-label">7 / 8</span>
+  <div class="slide-inner">
+    <h2 class="section-h">This is not a service quality crisis.<br>It is a service <span style="color:var(--teal)">communication</span> crisis.</h2>
+    <p class="section-sub">The data rules out a performance explanation. High Help Desk scores, mostly positive satisfaction gaps — the services are doing their job. The problem is visibility.</p>
+    <div class="two-col" style="margin-bottom:0">
+      <div class="reframe-card wrong">
+        <div class="tag">Common assumption</div>
+        <h4>Service quality problem</h4>
+        <p>Low awareness → services must be failing → invest in new infrastructure and expanded staff.</p>
+      </div>
+      <div class="reframe-card right">
+        <div class="tag">What the data shows</div>
+        <h4>Service communication problem</h4>
+        <p>Services are performing well — 6.6% / 13.7% awareness with high satisfaction scores = discoverability failure, not delivery failure.</p>
+      </div>
+    </div>
+    <div class="risk-banner">
+      <div style="font-size:20px;flex-shrink:0">⚠</div>
+      <div>
+        <h4>The budget risk if nothing changes</h4>
+        <p>Services that appear underutilized lose funding regardless of actual quality. With only 6.6% of students and 13.7% of staff aware, utilization data will always look weak — FSU risks defunding the very services its community values most, simply because those services aren't visible enough to be used.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SLIDE 8: Resolution ═══════════ -->
+<div class="section-divider"><span class="snum">05</span><span class="stitle">Resolution — Path Forward</span><div class="sline"></div></div>
+<div class="slide">
+  <span class="slide-label">8 / 8</span>
+  <div class="slide-inner">
+    <h2 class="section-h">More informed users are more satisfied users.<br>The fix doesn't require new spending.</h2>
+    <p class="section-sub">Students who feel "very informed" about IT score overall satisfaction 0.19 points higher than those who feel "not informed." For staff, the gap is even larger — 0.94 points across the same range.</p>
+    <div class="two-col">
+      <div>
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-lbl">Awareness level → overall IT satisfaction (mean DS score)</div>
+          <div class="chart-wrap" style="height:220px"><canvas id="slopeChart"></canvas></div>
+          <div class="legend">
+            <span><span class="lsq" style="background:#378ADD"></span>Students</span>
+            <span><span class="lsq" style="background:#00c9a7"></span>Staff</span>
+          </div>
+          <div style="margin-top:8px" class="gif-slot" style="min-height:40px;flex-direction:row;gap:10px;padding:10px 14px">
+            <strong style="font-size:12px">+ Slope Chart GIF (v2)</strong><span>Animated version</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px">Three targeted actions — no new infrastructure needed</p>
+        <div class="action-item">
+          <div class="action-num">1</div>
+          <div><h4>Embed IT services in Canvas</h4><p>98.6% of students are already there multiple times per week. Surface IT tools and support directly inside the platform.</p></div>
+        </div>
+        <div class="action-item">
+          <div class="action-num">2</div>
+          <div><h4>Rebuild onboarding — separately for each group</h4><p>Students and staff use completely different tools. The Canvas divide proves one message won't reach both.</p></div>
+        </div>
+        <div class="action-item">
+          <div class="action-num">3</div>
+          <div><h4>Activate the Help Desk as communicators</h4><p>Already scoring 3.72–3.88/4 across all dimensions. The most trusted touchpoint on campus — use it to promote what's available.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CLOSING ═══════════ -->
+<div class="section-divider"><span class="snum">—</span><span class="stitle">Closing</span><div class="sline"></div></div>
+<div class="slide">
+  <div class="closing-inner">
+    <div class="eyebrow">The bottom line</div>
+    <h2>Great services. <em>Invisible problem.</em> Fixable solution.</h2>
+    <p style="font-size:15px;color:var(--muted);max-width:540px;line-height:1.7">FSU has already invested in high-quality IT services and a Help Desk staff that earns near-perfect marks. The only thing standing between that investment and its full return is awareness.</p>
+    <div class="closing-stats">
+      <div class="closing-stat"><div class="n" style="color:var(--coral)">6.6%</div><div class="l">students "very informed"</div></div>
+      <div style="font-family:'DM Serif Display',serif;font-size:32px;color:var(--muted);padding-top:4px">→</div>
+      <div class="closing-stat"><div class="n">?%</div><div class="l">with targeted comms strategy</div></div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);font-style:italic;max-width:540px">"The full data story is ready. We can show you exactly where the gap lives, which services are affected most, and what a targeted communication strategy could look like."</p>
+  </div>
+</div>
+
+<!-- ══════════════════ CHARTS ══════════════════ -->
+<script>
+// ── Color palette ──
+const TEAL='#00c9a7', CORAL='#e84855', BLUE='#378ADD', AMBER='#f5a623', PURPLE='#7b5ea7';
+const gridColor='rgba(255,255,255,0.07)', tickColor='#7a93a8';
+
+// ── 1. Awareness distribution ──
+new Chart(document.getElementById('awarenessChart'),{
+  type:'bar',
+  data:{
+    labels:['Not informed','Somewhat informed','Informed','Very informed'],
+    datasets:[
+      {label:'Students',data:[5.2,42.3,46.0,6.6],backgroundColor:BLUE,borderRadius:3},
+      {label:'Staff',data:[6.8,39.0,40.4,13.7],backgroundColor:TEAL,borderRadius:3}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      y:{ticks:{callback:v=>v+'%',font:{size:10},color:tickColor},grid:{color:gridColor},max:55},
+      x:{ticks:{font:{size:10},color:tickColor},grid:{display:false}}
+    }
+  }
+});
+
+// ── 2. Help Desk scores ──
+new Chart(document.getElementById('helpdeskChart'),{
+  type:'bar',
+  data:{
+    labels:['Friendliness','Knowledge','Response\n(Local)','Response\n(Remote)'],
+    datasets:[
+      {label:'Students',data:[3.82,3.72,3.72,3.75],backgroundColor:BLUE,borderRadius:3},
+      {label:'Staff',data:[3.88,3.67,3.65,3.68],backgroundColor:TEAL,borderRadius:3}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      y:{min:3.0,max:4.1,ticks:{callback:v=>v.toFixed(1),font:{size:10},color:tickColor},grid:{color:gridColor}},
+      x:{ticks:{font:{size:10},color:tickColor},grid:{display:false}}
+    }
+  }
+});
+
+// ── 3. Canvas usage ──
+new Chart(document.getElementById('canvasChart'),{
+  type:'bar',
+  data:{
+    labels:['Multiple times/week','Once a week','Few times/month','Rarely','Never'],
+    datasets:[
+      {label:'Students',data:[98.6,0.5,0.5,0,0.5],backgroundColor:BLUE,borderRadius:4},
+      {label:'Staff',data:[7.7,1.4,3.5,9.1,78.3],backgroundColor:CORAL,borderRadius:4}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      y:{max:105,ticks:{callback:v=>v+'%',font:{size:11},color:tickColor},grid:{color:gridColor}},
+      x:{ticks:{font:{size:11},color:tickColor,maxRotation:20},grid:{display:false}}
+    }
+  }
+});
+
+// ── 4. Student gap lollipop ──
+// Sorted ascending (most negative gap first = most satisfaction surplus)
+const sLabels=['Academic Software','Online Collaboration','Lab & Print Computing','Campus Website','Banner Self-Service','Email Services','Software Downloads','Online Learning','Help Desk Support','Academic Wireless','Canvas LMS','Personal Wireless'];
+const sGaps=[-1.353,-1.080,-0.843,-0.763,-0.831,-0.498,-0.491,-0.665,-0.143,0.069,0.086,0.251];
+
+// Sort by gap ascending
+const sZip=sLabels.map((l,i)=>({l,g:sGaps[i]})).sort((a,b)=>a.g-b.g);
+const sSorted={labels:sZip.map(z=>z.l),gaps:sZip.map(z=>z.g)};
+const sColors=sSorted.gaps.map(g=>g>=0?CORAL:TEAL);
+
+new Chart(document.getElementById('studentGapChart'),{
+  type:'bar',
+  data:{
+    labels:sSorted.labels,
+    datasets:[{label:'Gap (IMP−DS)',data:sSorted.gaps,backgroundColor:sColors,borderRadius:3,barThickness:14}]
+  },
+  options:{
+    indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>{const v=ctx.raw;return` Gap: ${v>=0?'+':''}${v.toFixed(2)} (${v>=0?'satisfaction gap':'exceeds expectations'})`}}}
+    },
+    scales:{
+      x:{min:-1.6,max:0.5,ticks:{callback:v=>v.toFixed(1),font:{size:10},color:tickColor},grid:{color:gridColor},
+        title:{display:true,text:'← Exceeds expectations   |   Satisfaction gap →',color:tickColor,font:{size:10}}},
+      y:{ticks:{font:{size:10},color:tickColor},grid:{display:false}}
+    }
+  }
+});
+
+// ── 5. Staff importance vs satisfaction ──
+const stLabels=['Desktop &\nSoftware (SDCP)','Web Conf.\n(Zoom/Teams)','Banner\nSelf-Service','Wired\nNetwork','Online Course\nSoftware','Help Desk\nSupport','Email\nServices','Campus\nWebsite'];
+const stIMP=[3.747,3.681,3.586,3.596,3.646,3.530,3.528,3.446];
+const stDS=[3.619,3.843,3.712,3.675,3.664,3.731,3.657,3.584];
+
+// Sort by importance desc
+const stZip=stLabels.map((l,i)=>({l,imp:stIMP[i],ds:stDS[i]})).sort((a,b)=>b.imp-a.imp);
+
+new Chart(document.getElementById('staffGapChart'),{
+  type:'bar',
+  data:{
+    labels:stZip.map(z=>z.l),
+    datasets:[
+      {label:'Importance',data:stZip.map(z=>z.imp),backgroundColor:PURPLE,borderRadius:3,barThickness:10},
+      {label:'Satisfaction',data:stZip.map(z=>z.ds),backgroundColor:TEAL,borderRadius:3,barThickness:10}
+    ]
+  },
+  options:{
+    indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{min:3.0,max:4.1,ticks:{callback:v=>v.toFixed(1),font:{size:10},color:tickColor},grid:{color:gridColor},
+        title:{display:true,text:'Score (out of 4)',color:tickColor,font:{size:10}}},
+      y:{ticks:{font:{size:9},color:tickColor},grid:{display:false}}
+    }
+  }
+});
+
+// ── 6. Slope: awareness → overall satisfaction ──
+new Chart(document.getElementById('slopeChart'),{
+  type:'line',
+  data:{
+    labels:['Not informed','Somewhat\ninformed','Informed','Very informed'],
+    datasets:[
+      {label:'Students',data:[3.407,3.493,3.600,3.597],borderColor:BLUE,backgroundColor:'rgba(55,138,221,0.1)',pointBackgroundColor:BLUE,pointRadius:5,tension:0.3,fill:false},
+      {label:'Staff',data:[2.879,3.649,3.788,3.817],borderColor:TEAL,backgroundColor:'rgba(0,201,167,0.1)',pointBackgroundColor:TEAL,pointRadius:5,tension:0.3,fill:false,borderDash:[6,3]}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      y:{min:2.6,max:4.1,ticks:{callback:v=>v.toFixed(1),font:{size:11},color:tickColor},grid:{color:gridColor},
+        title:{display:true,text:'Mean overall IT satisfaction (out of 4)',color:tickColor,font:{size:10}}},
+      x:{ticks:{font:{size:11},color:tickColor},grid:{display:false}}
+    }
+  }
+});
+</script>
+</body>
+</html>
